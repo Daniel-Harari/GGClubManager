@@ -41,21 +41,3 @@ class PGClient:
 
     def commit(self):
         self.connection.commit()
-
-if __name__ == "__main__":
-    with PGClient(
-        host="sheepit.c7aqecseq98y.eu-central-1.rds.amazonaws.com",
-        port=5432,
-        user="sheepmaster",
-        password="Ihatedavid321",
-        database="postgres"
-    ) as client:
-        result = client.query(
-            """
-            SELECT table_schema, table_name
-            FROM information_schema.tables
-            WHERE table_type = 'BASE TABLE'
-            AND table_schema NOT IN ('pg_catalog', 'information_schema')
-            ORDER BY table_schema, table_name;
-            """)
-        print(result)

@@ -15,7 +15,6 @@ from db import Base, engine
 from middleware.auth import AuthMiddleware
 from middleware.rate_limit import RateLimitMiddleware
 from middleware.cors import CorsMiddleware
-from models import Player
 from routers.auth import router as auth_router
 from routers.transactions import router as transaction_router
 from routers.players import router as player_router
@@ -78,15 +77,17 @@ app.include_router(player_router)
 Base.metadata.create_all(bind=engine)
 
 
-
 @app.get("/")
 def read_root():
     return RedirectResponse(url="/auth/login")
 
 @app.get("/keves")
-def get_keves(current_user: Player = Depends(get_current_user)):
+def get_keves(_ = Depends(get_current_user)):
     return {"Keves Name": "David Ha-Antishemi"}
 
 @app.get("/harari")
-def get_harari(current_user: Player = Depends(get_current_user)):
+def get_harari(_ = Depends(get_current_user)):
     return ["top-reg"]
+
+if __name__ == "__main__":
+    uvicorn.run("app:app", host="0.0.0.0", port=8080, reload=True)

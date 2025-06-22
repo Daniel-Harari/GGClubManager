@@ -20,3 +20,5 @@ ALLOW_HEADERS = ["Accept", "Authorization", "Content-Type", "X-Requested-With", 
 
 MAX_CONTENT_LENGTH = 1024 * 1024
 MAX_HEADER_LENGTH = 8 * 1024
+
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 2

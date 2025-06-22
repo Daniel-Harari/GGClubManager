@@ -1,9 +1,9 @@
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel
 from enums import UserRole
+from schemas.base import BaseSchema
 
-class PlayerBase(BaseModel):
+class PlayerBase(BaseSchema):
     username: str
     agent_id: Optional[str]
     agent_name: Optional[str]

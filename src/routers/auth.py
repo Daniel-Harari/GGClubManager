@@ -34,7 +34,7 @@ async def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    user = ClientUserResponse(**user.model_dump())
+    user = ClientUserResponse.model_validate(user)
     # Create an access token
     access_token = create_access_token(user)
 

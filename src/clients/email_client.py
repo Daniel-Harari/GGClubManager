@@ -322,8 +322,7 @@ if __name__ == "__main__":
 
     try:
         # Get recent emails with CSV attachments
-        emails = client.get_emails_from_sender("support@clubgg.com"
-        )
+        emails = client.get_emails_from_sender("support@clubgg.com")
 
         # Download CSV attachments from each email
         for email in emails:

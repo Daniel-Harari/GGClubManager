@@ -1,9 +1,10 @@
 from datetime import datetime
 from enums import UserRole
-from pydantic import BaseModel, SecretStr
+from pydantic import SecretStr
+from schemas.base import BaseSchema
 
 # Base model with common attributes
-class ClientUserBase(BaseModel):
+class ClientUserBase(BaseSchema):
     username: str
 
     class Config:

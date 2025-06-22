@@ -5,17 +5,17 @@ from gg_exceptions.client_users import UserNotFound
 
 logger = GGLogger(__name__)
 
-def get_user_by_username(db, username) -> ClientUserInDB:
+def get_user_by_username(db, username) -> ClientUser:
     client_user =  db.query(ClientUser).filter(ClientUser.username == username).first()
     if not client_user:
         logger.warning(f'User not found: {username}')
         raise UserNotFound
     logger.info(f'Retrieved User: {client_user.username}')
-    return ClientUserInDB.model_validate(client_user)
+    return client_user
 
 
 def create_user(db, user: ClientUserCreate):
-    user = ClientUser(**user.model_dump())
+    user = user.to_orm(ClientUser)
     db.add(user)
     db.commit()
     logger.info(f'Created User: {user.username}')

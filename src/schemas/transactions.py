@@ -1,9 +1,8 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from schemas.base import BaseSchema
 
-
-class TransactionBase(BaseModel):
+class TransactionBase(BaseSchema):
     username: str
     re_entries: int
     fee: float
