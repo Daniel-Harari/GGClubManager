@@ -193,7 +193,8 @@ class ClubOverviewDataParser(ClubGGDataParser):
                 username=username,
                 role=role,
                 agent_id=agent_id,
-                agent_name=agent_name
+                agent_name=agent_name,
+                balance=0
             )
             players.append(player)
 
@@ -269,7 +270,7 @@ class RingGameDetailsDataParser(ClubGGDataParser):
 
 
 if __name__ == '__main__':
-    parser = RingGameDetailsDataParser('910171')
+    parser = ClubOverviewDataParser('910171')
     parser.load_data_from_file()
     parser.clean_data()
     print()
