@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from crud.players import get_player_by_username
 from crud.users import get_user_by_username, create_user, update_password
 from db import get_db
+from enums import UserRole
 from gg_exceptions.auth import AuthenticationError
 from gg_exceptions.client_users import UserNotFound
 from gg_exceptions.players import PlayerNotFound
@@ -68,7 +69,7 @@ async def register(
         id=str(player.id),
         username=str(player.username),
         hashed_password=hashed_password,
-        role=str(player.role)
+        role = UserRole(player.role
     )
     create_user(db, new_user)
     return {"message": "User created successfully"}
