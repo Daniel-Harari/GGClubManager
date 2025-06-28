@@ -6,3 +6,6 @@ class AuthNotProvided(AuthenticationError):
 
 class TokenExpired(AuthenticationError):
     pass
+
+class AuthorizationError(AuthenticationError):
+    pass

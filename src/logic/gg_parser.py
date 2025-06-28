@@ -269,7 +269,7 @@ class RingGameDetailsDataParser(ClubGGDataParser):
 
 
 if __name__ == '__main__':
-    parser = ClubOverviewDataParser('910171')
+    parser = RingGameDetailsDataParser('910171')
     parser.load_data_from_file()
     parser.clean_data()
     print()

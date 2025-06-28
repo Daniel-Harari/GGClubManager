@@ -19,3 +19,9 @@ def create_user(db, user: ClientUserCreate):
     db.add(user)
     db.commit()
     logger.info(f'Created User: {user.username}')
+
+def update_password(db, username, password):
+    client_user =  get_user_by_username(db, username, True)
+    client_user.hashed_password = password
+    db.commit()
+    logger.info(f"Password Changed Successfully")

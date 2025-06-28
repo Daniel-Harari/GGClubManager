@@ -1,4 +1,4 @@
-from typing import List, Type
+from typing import Sequence, Type
 
 from sqlalchemy.orm import Session
 
@@ -7,7 +7,7 @@ from logger import  GGLogger
 from gg_exceptions.players import PlayerNotFound
 from sqlalchemy import select, or_
 
-from schemas.players import PlayerResponse, PlayerCreate
+from schemas.players import PlayerCreate
 from models.players import Player
 from enums import UserRole
 
@@ -62,12 +62,11 @@ def get_player_by_username(db: Session, username) -> Type[Player]:
     logger.info(f'Retrieved Player: {player.username}')
     return player
 
-def get_downlines(db: Session, user: ClientUserResponse) -> List[PlayerResponse]:
+def get_downlines(db: Session, user: ClientUserResponse) -> Sequence[Player]:
     player =  get_player_by_username(db, user.username)
 
     downlines = db.execute(get_downline_query(player)).scalars().all()
     logger.info(f'Retrieved {len(downlines)} Downlines')
-    downlines = [PlayerResponse.model_validate(player) for player in downlines]
     return downlines
 
 def get_downline_query(player: Type[Player]):

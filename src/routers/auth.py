@@ -3,14 +3,14 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from crud.players import get_player_by_username
-from crud.users import get_user_by_username, create_user
+from crud.users import get_user_by_username, create_user, update_password
 from db import get_db
 from gg_exceptions.auth import AuthenticationError
 from gg_exceptions.client_users import UserNotFound
 from gg_exceptions.players import PlayerNotFound
 from schemas.auth import Token
 from schemas.client_users import ClientUserCreate, ClientUserAuth, ClientUserResponse
-from utils.auth_utils import create_access_token, pwd_context, authenticate_user
+from utils.auth_utils import create_access_token, pwd_context, authenticate_user, get_current_user
 
 router = APIRouter(
     prefix="/auth",
@@ -63,13 +63,23 @@ async def register(
             detail="Player not found in club"
         )
 
-
     hashed_password = pwd_context.hash(user_data.password.get_secret_value())
     new_user = ClientUserCreate(
-        id=player.id,
-        username=player.username,
+        id=str(player.id),
+        username=str(player.username),
         hashed_password=hashed_password,
-        role=player.role
+        role=str(player.role)
     )
     create_user(db, new_user)
+    return {"message": "User created successfully"}
+
+
+@router.post("/change_password")
+async def change_password(
+        user_data: ClientUserAuth,
+        db: Session = Depends(get_db),
+        current_user: ClientUserResponse = Depends(get_current_user)
+):
+    hashed_password = pwd_context.hash(user_data.password.get_secret_value())
+    update_password(db, current_user.username, hashed_password)
     return {"message": "User created successfully"}

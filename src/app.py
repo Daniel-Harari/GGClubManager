@@ -69,7 +69,7 @@ app.add_middleware(CorsMiddleware,
                    allow_headers=ALLOW_HEADERS,
                    max_age=MAX_AGE)
 app.add_middleware(AuthMiddleware)
-app.add_middleware(RateLimitMiddleware, )
+app.add_middleware(RateLimitMiddleware)
 
 app.include_router(auth_router)
 app.include_router(transaction_router)
@@ -90,4 +90,4 @@ def get_harari(_ = Depends(get_current_user)):
     return ["top-reg"]
 
 if __name__ == "__main__":
-    uvicorn.run("app:app", host="0.0.0.0", port=8080, reload=True)
+    uvicorn.run("app:app", host="0.0.0.0", port=8080)
