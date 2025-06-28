@@ -8,6 +8,7 @@ class PlayerBase(BaseSchema):
     agent_id: Optional[str]
     agent_name: Optional[str]
     role: UserRole
+    balance: float
 
 class PlayerCreate(PlayerBase):
     id: str

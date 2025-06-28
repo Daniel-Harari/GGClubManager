@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session
 
 from crud.players import get_downlines, get_player_by_username
 from db import get_db
-from gg_exceptions.auth import AuthorizationError
 from models.transactions import Transaction
 from utils.auth_utils import get_current_user, check_roles
 from schemas.transactions import TransactionCreate, TransactionResponse
