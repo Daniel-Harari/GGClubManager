@@ -69,7 +69,7 @@ async def register(
         id=str(player.id),
         username=str(player.username),
         hashed_password=hashed_password,
-        role = UserRole(player.role
+        role = UserRole(player.role)
     )
     create_user(db, new_user)
     return {"message": "User created successfully"}
