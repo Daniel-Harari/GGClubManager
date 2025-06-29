@@ -1,14 +1,15 @@
 import datetime as dt
 
-from sqlalchemy import Column, Integer, String, Float, DateTime, Date
-
+from sqlalchemy import Column, Integer, String, Float, DateTime, Date, Enum
+from enums import TransactionType
 from db import Base
 
 
 class Transaction(Base):
     __tablename__ = "transactions"
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    username = Column(String, index=True)
+    id = Column(String, primary_key=True, index=True)
+    username = Column(String, primary_key=True, index=True)
+    transaction_type = Column(Enum(TransactionType), index=True)
     details = Column(String)
     total_buyin = Column(Float)
     total_cashout = Column(Float)
