@@ -14,7 +14,7 @@ from clients.memory_cache import InMemoryCache
 from db import Base, engine
 from middleware.auth import AuthMiddleware
 from middleware.rate_limit import RateLimitMiddleware
-from middleware.cors import CorsMiddleware
+from fastapi.middleware.cors import CORSMiddleware
 from routers.auth import router as auth_router
 from routers.transactions import router as transaction_router
 from routers.players import router as player_router
@@ -63,7 +63,7 @@ app.add_middleware(
     max_content_length=MAX_CONTENT_LENGTH,
     max_headers_length=MAX_HEADER_LENGTH,
 )
-app.add_middleware(CorsMiddleware,
+app.add_middleware(CORSMiddleware,
                    allow_origins=ALLOW_ORIGINS,
                    allow_methods=ALLOW_METHODS,
                    allow_headers=ALLOW_HEADERS,
@@ -90,4 +90,4 @@ def get_harari(_ = Depends(get_current_user)):
     return ["top-reg"]
 
 if __name__ == "__main__":
-    uvicorn.run("app:app", host="0.0.0.0", port=8080)
+    uvicorn.run("app:app", host="0.0.0.0", port=8081)

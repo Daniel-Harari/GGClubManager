@@ -6,10 +6,12 @@ import re
 
 import pandas as pd
 import numpy as np
+from openpyxl.styles.builtins import total
 
 from enums import UserRole
 from logger import GGLogger
 from schemas.players import PlayerCreate
+from schemas.transactions import TransactionCreate
 
 logger = GGLogger(__name__)
 
@@ -87,7 +89,7 @@ class ClubGGDataParser:
             if not re.match(r'^\d{4}-\d{2}-\d{2}', str(text)):
                 return None
             dt = datetime.strptime(str(text)[:10], '%Y-%m-%d')
-            return dt
+            return dt.date()
         except (ValueError, TypeError):
             return None
 
@@ -226,6 +228,30 @@ class SNGDetailsDataParser(ClubGGDataParser):
     def clean_data(self, *args, **kwargs):
         super().clean_data(columns=self.COLUMNS, metadata_terms=self.METADATA_TERMS, metadata_rows=self.METADATA_ROWS,
                            header_rows=self.HEADER_ROWS)
+        
+    def get_transactions(self):
+        transactions: List[TransactionCreate] = list()
+        for i in range(len(self)):
+            df = self[i]
+            for _, row in df.iterrows():
+                username = row.get("MemberName")
+                buyin = row.get("Buyin", 0)
+                fee = row.get("Fee", 0)
+                winnings = row.get("Winnings", 0)
+                total_buyin = buyin if buyin else 0
+                total_cashout = winnings if winnings else 0
+
+                transaction = TransactionCreate(
+                    username=username,
+                    re_entries=0,
+                    fee=fee if fee else 0,
+                    details=df.attrs.get("Table Name", ""),
+                    total_buyin=total_buyin,
+                    total_cashout=total_cashout,
+                )
+                transactions.append(transaction)
+
+        return transactions
 
 
 class MTTDetailsDataParser(ClubGGDataParser):
@@ -247,6 +273,29 @@ class MTTDetailsDataParser(ClubGGDataParser):
         super().clean_data(columns=self.COLUMNS, metadata_terms=self.METADATA_TERMS, metadata_rows=self.METADATA_ROWS,
                            header_rows=self.HEADER_ROWS)
 
+    def get_transactions(self):
+        transactions: List[TransactionCreate] = list()
+        for i in range(len(self)):
+            df = self[i]
+            for _, row in df.iterrows():
+                username = row.get("MemberName")
+                fee = sum([row.Fee, row.TFee, row.ReFee, row.ReTFee])
+                total_buyin = sum([row.Buyin, row.TBuyin, row.ReBuyin, row.ReTBuyin, fee])
+                total_cashout = round(row.Winnings + total_buyin, 2)
+                hands = row.Hands
+                date = df.attrs.get("Date")
+                transaction = TransactionCreate(
+                    username=username,
+                    rake=fee,
+                    date=date,
+                    details=df.attrs.get("Table Name", ""),
+                    total_buyin=total_buyin,
+                    total_cashout=total_cashout,
+                    hands=hands
+                )
+                transactions.append(transaction)
+        return transactions
+
 
 class RingGameDetailsDataParser(ClubGGDataParser):
     SHEET_NAME = "Ring Game Detail"
@@ -267,11 +316,34 @@ class RingGameDetailsDataParser(ClubGGDataParser):
         super().clean_data(columns=self.COLUMNS, metadata_terms=self.METADATA_TERMS, metadata_rows=self.METADATA_ROWS,
                            header_rows=self.HEADER_ROWS)
 
+    def get_transactions(self):
+        transactions: List[TransactionCreate] = list()
+        for i in range(len(self)):
+            df = self[i]
+            for _, row in df.iterrows():
+                username = row.get("MemberName")
+                buyin = row.get("Buyin", 0)
+                cashout = row.get("Cashout", 0)
+                fee = row.get("Fee", 0)
+                total_buyin = buyin if buyin else 0
+                total_cashout = cashout if cashout else 0
+                transaction = TransactionCreate(
+                    username=username,
+                    re_entries=0,
+                    fee=fee if fee else 0,
+                    details=df.attrs.get("Table Name", ""),
+                    total_buyin=total_buyin,
+                    total_cashout=total_cashout,
+                )
+                transactions.append(transaction)
+        return transactions
+
 
 
 if __name__ == '__main__':
-    parser = ClubOverviewDataParser('910171')
+    parser = RingGameDetailsDataParser('910171')
     parser.load_data_from_file()
     parser.clean_data()
+    # parser.get_transactions()
     print()
 

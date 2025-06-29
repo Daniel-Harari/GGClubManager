@@ -100,3 +100,8 @@ def get_downline_query(player: Type[Player]):
         )
 
     return query
+
+def update_balance(db: Session, username: str, amount: int):
+    player = get_player_by_username(db, username)
+    player.balance += amount
+    db.commit()
