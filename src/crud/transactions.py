@@ -1,55 +1,89 @@
+from crud.players import update_balance
 from enums import TransactionType
 from logger import GGLogger
 from models import Transaction
 from schemas.transactions import TransactionCreate
+from datetime import date
+from typing import Optional, Sequence
+from sqlalchemy import select
 
 logger = GGLogger(__name__)
+
 
 def create_transaction(db, transaction: TransactionCreate):
     db.add(transaction.to_orm(Transaction))
     db.commit()
+    update_balance(db, transaction.username, round(transaction.total_cashout - transaction.total_buyin, 2))
+
     logger.info(f'Created Transaction: {transaction.id}')
 
 
-def get_transactions(db, username, skip: int = 0, limit: int = 100) -> list[Transaction]:
-    transactions = db.query(Transaction).filter(Transaction.username == username).offset(skip).limit(limit).all()
-    return transactions
+def get_transactions(
+    db, 
+    username: str, 
+    from_date: Optional[date] = None,
+    to_date: Optional[date] = None,
+    skip: int = 0, 
+    limit: int = 100
+) -> Sequence[Transaction]:
+    """
+    Get transactions for a user with optional date range filtering.
+    
+    Args:
+        db: Database session
+        username: Username to filter transactions
+        from_date: Start date (inclusive)
+        to_date: End date (inclusive)
+        skip: Number of records to skip
+        limit: Maximum number of records to return
+    """
+    query = select(Transaction).where(Transaction.username == username)
+    
+    if from_date:
+        query = query.where(Transaction.date >= from_date)
+    
+    if to_date:
+        query = query.where(Transaction.date <= to_date)
+        
+    return db.execute(query.offset(skip).limit(limit)).scalars().all()
+
 
 def get_transaction(db, id, username) -> Transaction:
     transaction = db.query(Transaction).filter(Transaction.id == id, Transaction.username == username).first()
     return transaction
 
-def merge_transaction(db, transaction: TransactionCreate):
-    db_transaction = get_transaction(db, transaction.id, transaction.username)
-    if db_transaction:
-        db_transaction.total_buyin += transaction.total_buyin
-        db_transaction.total_cashout += transaction.total_cashout
-        db_transaction.rake += transaction.rake
-        db_transaction.bad_beat_contribution += transaction.bad_beat_contribution
-        db_transaction.bad_beat_cashout += transaction.bad_beat_cashout
-        db_transaction.hands += transaction.hands
-        db.commit()
-    else:
-        create_transaction(db, transaction)
-    logger.info(f'Updated Transaction: {transaction.id}')
 
 def overwrite_transaction(db, transaction: TransactionCreate):
     db_transaction = get_transaction(db, transaction.id, transaction.username)
     if db_transaction:
-        db_transaction.total_buyin = transaction.total_buyin
-        db_transaction.total_cashout = transaction.total_cashout
-        db_transaction.rake = transaction.rake
-        db_transaction.bad_beat_contribution = transaction.bad_beat_contribution
-        db_transaction.bad_beat_cashout = transaction.bad_beat_cashout
-        db_transaction.hands = transaction.hands
-        db.commit()
-        logger.info(f'Updated Transaction: {transaction.id}')
+        # Fields to check and update
+        fields = [
+            'total_buyin',
+            'total_cashout',
+            'rake',
+            'bad_beat_contribution',
+            'bad_beat_cashout',
+            'hands'
+        ]
+        original_profit = db_transaction.total_cashout - db_transaction.total_buyin
+        
+        # Track if any changes were made
+
+        if transaction.hands > db_transaction.hands:
+            for field in fields:
+                new_value = getattr(transaction, field)
+                current_value = getattr(db_transaction, field)
+                if current_value != new_value:
+                    setattr(db_transaction, field, new_value)
+
+            db.commit()
+            logger.info(f'Updated Transaction: {transaction.id}')
+            new_profit = db_transaction.total_cashout - db_transaction.total_buyin
+            update_balance(db, transaction.username, float(round(new_profit - original_profit, 2)))
     else:
         create_transaction(db, transaction)
 
 def transaction_handler(db, transaction: TransactionCreate):
     match transaction.transaction_type:
-        case TransactionType.RING_GAME:
-            merge_transaction(db, transaction)
-        case TransactionType.MTT | TransactionType.SNG | TransactionType.SPIN_AND_GOLD:
+        case TransactionType.MTT | TransactionType.SNG | TransactionType.SPIN_AND_GOLD | TransactionType.RING_GAME:
             overwrite_transaction(db, transaction)

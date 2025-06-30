@@ -18,6 +18,6 @@ class Transaction(Base):
     bad_beat_contribution = Column(Float, default=0)
     bad_beat_cashout = Column(Float, default=0)
     hands = Column(Integer, default=0)
-
+    created_by = Column(String)
     created_at = Column(DateTime, default=dt.datetime.now(dt.UTC))
     updated_at = Column(DateTime, default=dt.datetime.now(dt.UTC), onupdate=dt.datetime.now(dt.UTC))

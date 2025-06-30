@@ -19,8 +19,10 @@ class TransactionCreate(TransactionBase):
     bad_beat_contribution: float = 0
     bad_beat_cashout: float = 0
     hands: int = 0
+    created_by: str
 
 class TransactionResponse(TransactionBase):
+    created_by: str
     created_at: datetime
     updated_at: datetime
 

@@ -138,14 +138,19 @@ class ClubGGDataParser:
 
     def clean_data(self, columns: List[str], metadata_terms: Optional[Set[str]] = None, metadata_rows: int = 0,
                    header_rows: int = 1, *args, **kwargs):
-        self._split_tables()
-        self._set_metadate(metadata_terms, metadata_rows)
-        self.keep_relevant_columns(len(columns))
-        self._set_column_names(columns)
-        self._remove_irrelevant_rows(metadata_rows + header_rows)
-        self._normalize_none()
-        self._clean = True
-        logger.info("Finished cleaning data")
+        if len(self._raw_data) <= header_rows + metadata_rows:
+            self._clean = True
+            self.data = list()
+            logger.info("No data to clean")
+        else:
+            self._split_tables()
+            self._set_metadate(metadata_terms, metadata_rows)
+            self.keep_relevant_columns(len(columns))
+            self._set_column_names(columns)
+            self._remove_irrelevant_rows(metadata_rows + header_rows)
+            self._normalize_none()
+            self._clean = True
+            logger.info("Finished cleaning data")
 
     def __getitem__(self, item):
         return self.data[item]
@@ -249,6 +254,7 @@ class SNGDetailsDataParser(ClubGGDataParser):
                     details=df.attrs.get("Table Name"),
                     total_buyin=row.Buyin + row.Fee,
                     total_cashout=row.Prize,
+                    created_by='App'
                 )
                 transactions.append(transaction)
 
@@ -292,6 +298,7 @@ class MTTDetailsDataParser(ClubGGDataParser):
                     total_buyin=total_buyin,
                     total_cashout=total_cashout,
                     hands=row.Hands,
+                    created_by='App'
                 )
                 transactions.append(transaction)
         return transactions
@@ -309,12 +316,71 @@ class RingGameDetailsDataParser(ClubGGDataParser):
     def __init__(self, club_id):
         super().__init__(club_id)
 
-    def load_data_from_file(self, file=None, **kwargs):
-        super().load_data_from_file(file, self.SHEET_NAME, **kwargs)
+    def get_latest_files(self, n=2):
+        """Get the n latest files for the club."""
+        files = list(self.DATA_DIR.glob(f'{self.club_id}_*.xlsx'))
+        # Sort files by the date in filename (assuming format club_id_YYYYMMDD.xlsx)
+        files.sort(key=lambda x: x.name.split('_')[1], reverse=True)
+        return files[:n]
+
+    def load_data_from_file(self, file=None, sheet_name=None, **kwargs):
+        """Load data from one or two latest files."""
+        logger.info(sheet_name)
+        if not file:
+            files = self.get_latest_files()
+            dfs = []
+            for file in files:
+                logger.info(f'Getting Data From: {file}')
+                df = pd.read_excel(file, sheet_name=self.SHEET_NAME, header=None, **kwargs)
+                dfs.append(df)
+            # Concatenate the dataframes
+            self._raw_data = pd.concat(dfs, ignore_index=True)
+        else:
+            super().load_data_from_file(file, self.SHEET_NAME, **kwargs)
 
     def clean_data(self, *args, **kwargs):
         super().clean_data(columns=self.COLUMNS, metadata_terms=self.METADATA_TERMS, metadata_rows=self.METADATA_ROWS,
                            header_rows=self.HEADER_ROWS)
+        self.merge_ring_game_data()
+
+    
+    def merge_ring_game_data(self):
+        """Merge ring game tables that have the same ID but different dates"""
+        grouped_tables = {}
+        # Group tables by ID
+        for df in self.data:
+            df_id = df.attrs.get('id')
+            if df_id:
+                if df_id not in grouped_tables:
+                    grouped_tables[df_id] = []
+                grouped_tables[df_id].append(df)
+        
+        merged_data = []
+        numeric_columns = self.COLUMNS[2:]
+        
+        for tables in grouped_tables.values():
+            # If only one table for this ID, add it as is
+            if len(tables) == 1:
+                merged_data.append(tables[0])
+                continue
+            
+            # Check if tables have different dates
+            dates = {df.attrs.get('Date') for df in tables}
+            if len(dates) > 1:
+                # Different dates - merge tables
+                combined = pd.concat(tables)
+                merged = combined.groupby('MemberName', as_index=False).agg({
+                    'MemberID': 'first',
+                    **{col: 'sum' for col in numeric_columns}
+                })
+                # Preserve metadata from the latest table
+                merged.attrs = tables[0].attrs
+                merged_data.append(merged)
+            else:
+                # Same date - keep only the latest table
+                merged_data.append(tables[0])
+        
+        self.data = merged_data
 
     def get_transactions(self):
         transactions: List[TransactionCreate] = list()
@@ -332,7 +398,8 @@ class RingGameDetailsDataParser(ClubGGDataParser):
                     details=df.attrs.get("Table Name", ""),
                     total_buyin=row.Buyin,
                     total_cashout=row.Cashout,
-                    hands=row.Hands
+                    hands=row.Hands,
+                    created_by='App'
                 )
                 transactions.append(transaction)
         return transactions
@@ -369,16 +436,8 @@ class SpinAndGoldDataParser(ClubGGDataParser):
                     details=df.attrs.get("Table Name", ""),
                     total_buyin=row.Buyin,
                     total_cashout=row.Prize,
-                    hands=row.Hands
+                    hands=row.Hands,
+                    created_by='App'
                 )
                 transactions.append(transaction)
         return transactions
-
-
-if __name__ == '__main__':
-    parser = SNGDetailsDataParser('910171')
-    parser.load_data_from_file()
-    parser.clean_data()
-    parser.get_transactions()
-    print()
-
