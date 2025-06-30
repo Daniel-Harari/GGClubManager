@@ -48,7 +48,7 @@ def get_transactions(
     
     if to_date:
         query = query.where(Transaction.date <= to_date)
-        
+    query = query.order_by(Transaction.date.desc())
     return db.execute(query.offset(skip).limit(limit)).scalars().all()
 
 
