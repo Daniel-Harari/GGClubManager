@@ -1,3 +1,4 @@
+from enums import UserRole
 from logger import GGLogger
 from models import ClientUser
 from schemas.client_users import ClientUserCreate, ClientUserInDB
@@ -25,3 +26,11 @@ def update_password(db, username, password):
     client_user.hashed_password = password
     db.commit()
     logger.info(f"Password Changed Successfully")
+
+def update_role(db, username, role: UserRole):
+    client_user =  get_user_by_username(db, username)
+    if client_user.role != role:
+        client_user.role = role
+        db.commit()
+        logger.info(f"Role Changed Successfully")
+

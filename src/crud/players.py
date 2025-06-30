@@ -2,6 +2,7 @@ from typing import Sequence, Type
 
 from sqlalchemy.orm import Session
 
+from crud.users import update_role
 from schemas.client_users import ClientUserResponse
 from logger import  GGLogger
 from gg_exceptions.players import PlayerNotFound
@@ -50,6 +51,7 @@ def update_player(db: Session, player: PlayerCreate) -> Type[Player]:
     # Commit only if there were changes
     if has_changes:
         db.commit()
+        update_role(db, player.username, player.role)
 
     return db_player
 
@@ -102,8 +104,6 @@ def get_downline_query(player: Type[Player]):
     return query
 
 def update_balance(db: Session, username: str, amount: float):
-    if username == 'DaniDonk':
-        print('DaniDonk')
     player = get_player_by_username(db, username)
     player.balance += amount
     db.commit()

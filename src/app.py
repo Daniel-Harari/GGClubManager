@@ -67,6 +67,8 @@ app.add_middleware(CORSMiddleware,
                    allow_origins=ALLOW_ORIGINS,
                    allow_methods=ALLOW_METHODS,
                    allow_headers=ALLOW_HEADERS,
+                   allow_credentials=True,
+                   expose_headers=["X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset", "Allow-Control-Allow-Origin"],
                    max_age=MAX_AGE)
 app.add_middleware(AuthMiddleware)
 app.add_middleware(RateLimitMiddleware)

@@ -1,6 +1,6 @@
 from datetime import datetime, date
 from hashlib import md5
-from typing import Optional
+from typing import Optional, Tuple
 
 from enums import TransactionType
 from schemas.base import BaseSchema
@@ -30,19 +30,28 @@ class TransactionResponse(TransactionBase):
         from_attributes = True
 
 class TransferTransaction:
+    transfer_from: str
     transfer_to: str
     transfer_amount: float
     date: date = date.today()
 
 
-
-    def to_transaction_create(self,) -> TransactionCreate:
-        return TransactionCreate(
-            id=md5(str(datetime.now()).encode()).hexdigest(),
+    def to_transaction_creates(self,) -> Tuple[TransactionCreate, TransactionCreate]:
+        return (TransactionCreate(
+            id=md5(f'{self.transfer_from}-{self.transfer_to}-{self.transfer_amount}-{self.date}'.encode()).hexdigest(),
             username=self.transfer_to,
             transaction_type=TransactionType.TRANSFER,
             details=f'Transfer to {self.transfer_to}',
             total_buyin=0,
             total_cashout=self.transfer_amount,
             date=date.today()
-        )
+        ),
+
+        TransactionCreate(
+            id=md5(f'{self.transfer_from}-{self.transfer_to}-{self.transfer_amount}-{self.date}'.encode()).hexdigest(),
+            username=self.transfer_from,
+            transaction_type=TransactionType.TRANSFER,
+            details=f'Transfer from {self.transfer_from}',
+            total_buyin=self.transfer_amount,
+            total_cashout=0,
+        ))

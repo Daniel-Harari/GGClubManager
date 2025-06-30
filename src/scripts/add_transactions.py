@@ -1,5 +1,5 @@
 from logic.gg_parser import MTTDetailsDataParser, SNGDetailsDataParser, SpinAndGoldDataParser, RingGameDetailsDataParser
-from crud.transactions import transaction_handler
+from crud.transactions import overwrite_transaction
 from db import SessionLocal
 
 
@@ -12,4 +12,4 @@ if __name__ == '__main__':
         parser.clean_data()
         transactions = parser.get_transactions()
         for t in transactions:
-            transaction_handler(db, t)
+            overwrite_transaction(db, t)

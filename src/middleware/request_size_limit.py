@@ -10,7 +10,7 @@ class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
         self,
         app,
         max_content_length: int = 1024 * 1024,  # 1MB default
-        max_headers_length: int = 8192,          # 8KB default
+        max_headers_length: int = 1024 * 8,          # 8KB default
     ):
         super().__init__(app)
         self.max_content_length = max_content_length

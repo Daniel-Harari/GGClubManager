@@ -11,11 +11,12 @@ logger = GGLogger(__name__)
 
 
 def create_transaction(db, transaction: TransactionCreate):
-    db.add(transaction.to_orm(Transaction))
+    transaction - transaction.to_orm(Transaction)
+    db.add(transaction)
     db.commit()
     update_balance(db, transaction.username, round(transaction.total_cashout - transaction.total_buyin, 2))
-
     logger.info(f'Created Transaction: {transaction.id}')
+    return transaction
 
 
 def get_transactions(
@@ -82,8 +83,3 @@ def overwrite_transaction(db, transaction: TransactionCreate):
             update_balance(db, transaction.username, float(round(new_profit - original_profit, 2)))
     else:
         create_transaction(db, transaction)
-
-def transaction_handler(db, transaction: TransactionCreate):
-    match transaction.transaction_type:
-        case TransactionType.MTT | TransactionType.SNG | TransactionType.SPIN_AND_GOLD | TransactionType.RING_GAME:
-            overwrite_transaction(db, transaction)
