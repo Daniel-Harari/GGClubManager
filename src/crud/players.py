@@ -1,4 +1,4 @@
-from typing import Sequence, Type
+from typing import Type, List
 
 from sqlalchemy.orm import Session
 
@@ -64,25 +64,27 @@ def get_player_by_username(db: Session, username) -> Type[Player]:
     logger.info(f'Retrieved Player: {player.username}')
     return player
 
-def get_downlines(db: Session, user: ClientUserResponse) -> Sequence[Player]:
+
+def get_downlines(db: Session, user: ClientUserResponse) -> List[Player]:
     player =  get_player_by_username(db, user.username)
 
     downlines = db.execute(get_downline_query(player)).scalars().all()
     logger.info(f'Retrieved {len(downlines)} Downlines')
-    return downlines
+    return [player, *downlines]
+
 
 def get_downline_query(player: Type[Player]):
     query = select(Player)
 
-    if player.role in [UserRole.MASTER, UserRole.MANAGER]:
-        # Master and Manager can see all users except other Masters and Managers
+    if player.role == UserRole.MANAGER:
+        # Manager can see all users except other Masters and Managers
         query = query.where(Player.role.notin_([UserRole.MASTER, UserRole.MANAGER]))
 
     elif player.role == UserRole.SUPER_AGENT:
         query = query.where(
             or_(
                 # Direct Agents
-                (player.role == UserRole.AGENT) & (player.agent_id == player.id),
+                (Player.role == UserRole.AGENT) & (Player.agent_id == player.id),
                 # Players under those Agents
                 (Player.role == UserRole.PLAYER) & (
                     Player.agent_id.in_(

@@ -3,7 +3,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 from consts import PUBLIC_PATHS
-from gg_exceptions.auth import TokenExpired, AuthNotProvided, AuthenticationError
+from gg_exceptions.auth import TokenExpired, AuthNotProvided, AuthenticationError, AuthorizationError
 from utils.auth_utils import verify_token
 
 
@@ -35,4 +35,9 @@ class AuthMiddleware(BaseHTTPMiddleware):
                 status_code=401,
                 content={"detail": "Malformed token"},
                 headers={"WWW-Authenticate": "Bearer"},
+            )
+        except AuthorizationError:
+            return JSONResponse(
+                status_code=403,
+                content={"detail": "Not authorized to access this resource"},
             )

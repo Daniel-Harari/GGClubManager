@@ -1,5 +1,5 @@
+from fastapi import HTTPException
 from crud.players import update_balance
-from enums import TransactionType
 from logger import GGLogger
 from models import Transaction
 from schemas.transactions import TransactionCreate
@@ -11,9 +11,12 @@ logger = GGLogger(__name__)
 
 
 def create_transaction(db, transaction: TransactionCreate):
-    transaction - transaction.to_orm(Transaction)
-    db.add(transaction)
-    db.commit()
+    transaction = transaction.to_orm(Transaction)
+    try:
+        db.add(transaction)
+        db.commit()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Transaction already exists")
     update_balance(db, transaction.username, round(transaction.total_cashout - transaction.total_buyin, 2))
     logger.info(f'Created Transaction: {transaction.id}')
     return transaction

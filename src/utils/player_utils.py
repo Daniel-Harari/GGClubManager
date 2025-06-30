@@ -1,9 +1,10 @@
-from sqlalchemy import select, or_
+from typing import Iterable, Type, Union
 
-from schemas.players import PlayerResponse
-from models.players import Player
-from enums import UserRole
+from models import Player
+from schemas.players import PlayerBase
 
 
+def is_downline(username: str, downlines: Iterable[Union[Type[PlayerBase], Player]]):
+    return username in [user.username for user in downlines]
 
 
