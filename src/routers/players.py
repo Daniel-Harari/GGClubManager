@@ -10,7 +10,7 @@ from gg_exceptions.players import PlayerNotFound
 from schemas.players import PlayerResponse, PlayerCreate
 from schemas.client_users import ClientUserResponse
 from utils.auth_utils import get_current_user, check_roles
-from utils.player_utils import is_downline
+from utils.player_utils import get_downline
 
 router = APIRouter(
     prefix="/players",
@@ -57,9 +57,10 @@ async def player_downlines(current_user: ClientUserResponse = Depends(get_curren
 @check_roles([UserRole.MASTER, UserRole.MANAGER, UserRole.SUPER_AGENT, UserRole.AGENT])
 async def get_player(player_username: str, db: Session = Depends(get_db), current_user: ClientUserResponse = Depends(get_current_user)):
     downlines = player_crud.get_downlines(db, current_user)
-    if not is_downline(player_username, downlines):
+    player = get_downline(player_username, downlines)
+    if not player:
         raise HTTPException(
             status_code=403,
             detail="You don't have permission to access this player's information"
         )
-    return player_crud.get_player_by_username(db, player_username)
+    return player
