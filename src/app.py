@@ -58,6 +58,8 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 # Add this before other middleware
+app.add_middleware(RateLimitMiddleware)
+app.add_middleware(AuthMiddleware)
 app.add_middleware(
     RequestSizeLimitMiddleware,
     max_content_length=MAX_CONTENT_LENGTH,
@@ -67,18 +69,11 @@ app.add_middleware(CORSMiddleware,
                    allow_origins=ALLOW_ORIGINS
                    )
 
-app.add_middleware(AuthMiddleware)
-app.add_middleware(RateLimitMiddleware)
 
 app.include_router(auth_router)
 app.include_router(transaction_router)
 app.include_router(player_router)
 Base.metadata.create_all(bind=engine)
-
-
-@app.get("/")
-def read_root():
-    return RedirectResponse(url="/auth/login")
 
 @app.get("/keves")
 def get_keves(_ = Depends(get_current_user)):
