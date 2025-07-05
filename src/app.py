@@ -6,15 +6,15 @@ from fastapi import FastAPI
 from fastapi.params import Depends
 from fastapi.responses import RedirectResponse
 from fastapi_cache import FastAPICache
+from starlette.middleware.cors import CORSMiddleware
 
 from consts import CACHE_CLEANUP_INTERVAL, ALLOW_ORIGINS, MAX_CONTENT_LENGTH, \
-    MAX_HEADER_LENGTH
+    MAX_HEADER_LENGTH, ALLOW_METHODS, ALLOW_HEADERS
 from logger import GGLogger
 from clients.memory_cache import InMemoryCache
 from db import Base, engine
 from middleware.auth import AuthMiddleware
 from middleware.rate_limit import RateLimitMiddleware
-from middleware.cors import CORSMiddleware
 from routers.auth import router as auth_router
 from routers.transactions import router as transaction_router
 from routers.players import router as player_router
@@ -58,15 +58,19 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 # Add this before other middleware
-app.add_middleware(RateLimitMiddleware)
-app.add_middleware(AuthMiddleware)
 app.add_middleware(
     RequestSizeLimitMiddleware,
     max_content_length=MAX_CONTENT_LENGTH,
     max_headers_length=MAX_HEADER_LENGTH,
 )
+app.add_middleware(AuthMiddleware)
+app.add_middleware(RateLimitMiddleware)
 app.add_middleware(CORSMiddleware,
-                   allow_origins=ALLOW_ORIGINS
+                   allow_origins=ALLOW_ORIGINS,
+                   allow_credentials=True,
+                   allow_methods=ALLOW_METHODS,
+                   allow_headers=ALLOW_HEADERS,
+                   expose_headers=["*"]
                    )
 
 
