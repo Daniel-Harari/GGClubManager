@@ -77,7 +77,7 @@ def get_downline_query(player: Type[Player]):
     query = select(Player)
 
     if player.role == UserRole.MANAGER:
-        # Manager can see all users except other Masters and Managers
+        # Manager can see all users except Master and other Managers
         query = query.where(Player.role.notin_([UserRole.MASTER, UserRole.MANAGER]))
 
     elif player.role == UserRole.SUPER_AGENT:

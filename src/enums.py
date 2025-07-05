@@ -14,5 +14,9 @@ class TransactionType(Enum):
     SNG = "SnG"
     RING_GAME = "Ring Game"
     SPIN_AND_GOLD = "Spin and Gold"
-    LEADERBOARD = "Leaderboard"
+    RAKEBACK = "RakeBack"
     TRANSFER = "Transfer"
+
+class RakebackType(Enum):
+    FLAT = "FLAT"  # Rakeback only for player's own rake
+    ALL_DOWNLINES = "ALL_DOWNLINES"  # Rakeback includes downlines' rake

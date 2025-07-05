@@ -23,7 +23,6 @@ class AuthMiddleware(BaseHTTPMiddleware):
             return JSONResponse(
                 status_code=401,
                 content={"detail": "Token has expired"},
-                headers={"WWW-Authenticate": "Bearer"},
             )
         except AuthNotProvided:
             return JSONResponse(
@@ -34,7 +33,6 @@ class AuthMiddleware(BaseHTTPMiddleware):
             return JSONResponse(
                 status_code=401,
                 content={"detail": "Malformed token"},
-                headers={"WWW-Authenticate": "Bearer"},
             )
         except AuthorizationError:
             return JSONResponse(
