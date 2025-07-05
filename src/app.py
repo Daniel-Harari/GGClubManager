@@ -7,14 +7,14 @@ from fastapi.params import Depends
 from fastapi.responses import RedirectResponse
 from fastapi_cache import FastAPICache
 
-from consts import CACHE_CLEANUP_INTERVAL, ALLOW_ORIGINS, ALLOW_HEADERS, ALLOW_METHODS, MAX_AGE, MAX_CONTENT_LENGTH, \
+from consts import CACHE_CLEANUP_INTERVAL, ALLOW_ORIGINS, MAX_CONTENT_LENGTH, \
     MAX_HEADER_LENGTH
 from logger import GGLogger
 from clients.memory_cache import InMemoryCache
 from db import Base, engine
 from middleware.auth import AuthMiddleware
 from middleware.rate_limit import RateLimitMiddleware
-from fastapi.middleware.cors import CORSMiddleware
+from middleware.cors import CORSMiddleware
 from routers.auth import router as auth_router
 from routers.transactions import router as transaction_router
 from routers.players import router as player_router
@@ -64,12 +64,9 @@ app.add_middleware(
     max_headers_length=MAX_HEADER_LENGTH,
 )
 app.add_middleware(CORSMiddleware,
-                   allow_origins=ALLOW_ORIGINS,
-                   allow_methods=ALLOW_METHODS,
-                   allow_headers=ALLOW_HEADERS,
-                   allow_credentials=True,
-                   expose_headers=["X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset", "Allow-Control-Allow-Origin"],
-                   max_age=MAX_AGE)
+                   allow_origins=ALLOW_ORIGINS
+                   )
+
 app.add_middleware(AuthMiddleware)
 app.add_middleware(RateLimitMiddleware)
 

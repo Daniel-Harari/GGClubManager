@@ -18,7 +18,13 @@ ALLOW_ORIGINS = [
 ALLOW_METHODS = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
 MAX_AGE = 60 * 60
 
-ALLOW_HEADERS = ['*']
+ALLOW_HEADERS = [
+    "Content-Type",
+    "Authorization",
+    "Accept",
+    "Origin",
+    "X-Requested-With",
+]
 
 MAX_CONTENT_LENGTH = 1024 * 1024 * 10
 MAX_HEADER_LENGTH = 1024 * 1024
